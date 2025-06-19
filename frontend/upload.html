@@ -1,48 +1,98 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Digit Recognizer</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 40px;
-        }
-        .preview {
-            margin-top: 20px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Digit Recognizer</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+
+    form {
+      max-width: 400px;
+      margin: auto;
+      padding: 20px;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    input[type="file"] {
+      margin-bottom: 15px;
+    }
+
+    button {
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    #result {
+      text-align: center;
+      font-size: 20px;
+      margin-top: 20px;
+      color: #000080;
+    }
+  </style>
 </head>
 <body>
-    <h1>Digit Recognizer</h1>
-    <form id="upload-form">
-        <label>Select an image of a digit (0-9):</label><br><br>
-        <input type="file" id="file-input" name="file" accept="image/*"><br><br>
-        <button type="submit">Predict</button>
-    </form>
 
-    <div class="preview">
-        <h3>Result:</h3>
-        <pre id="result">Upload a digit image to see the prediction here.</pre>
-    </div>
+  <h1>Digit Recognizer</h1>
 
-    <script>
-        document.getElementById("upload-form").addEventListener("submit", async function (e) {
-            e.preventDefault();
-            const fileInput = document.getElementById("file-input");
-            const file = fileInput.files[0];
+  <form id="upload-form">
+    <input type="file" id="file-input" name="file" accept="image/*" required><br>
+    <button type="submit">Predict</button>
+  </form>
 
-            const formData = new FormData();
-            formData.append("file", file);
+  <div id="result"></div>
 
-            const response = await fetch("http://127.0.0.1:8000/predict/", {
-                method: "POST",
-                body: formData
-            });
+  <script>
+    document.getElementById("upload-form").addEventListener("submit", async function (e) {
+      e.preventDefault();
 
-            const result = await response.json();
-            document.getElementById("result").textContent = `Predicted Digit: ${result.prediction}`;
+      const fileInput = document.getElementById("file-input");
+      const file = fileInput.files[0];
+
+      if (!file) {
+        alert("Please select a file.");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        const response = await fetch("http://127.0.0.1:8000/predict/", {
+          method: "POST",
+          body: formData,
         });
-    </script>
+
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+
+        const result = await response.json();
+        document.getElementById("result").textContent = "Predicted Digit: " + result.prediction;
+      } catch (error) {
+        console.error("Error:", error);
+        alert("An error occurred while predicting.");
+      }
+    });
+  </script>
+
 </body>
 </html>
