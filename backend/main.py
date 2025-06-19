@@ -43,8 +43,6 @@ async def predict(file: UploadFile = File(...)):
     image = image.resize((28, 28))
     image = np.array(image) / 255.0
     image = image.reshape(1, -1)
-    
-
 
     prediction = model.predict(image)[0]
 
