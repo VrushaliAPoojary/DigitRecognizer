@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Digit Recognizer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+        }
+        .preview {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Digit Recognizer</h1>
+    <form id="upload-form">
+        <label>Select an image of a digit (0-9):</label><br><br>
+        <input type="file" id="file-input" name="file" accept="image/*"><br><br>
+        <button type="submit">Predict</button>
+    </form>
+
+    <div class="preview">
+        <h3>Result:</h3>
+        <pre id="result">Upload a digit image to see the prediction here.</pre>
+    </div>
+
+    <script>
+        document.getElementById("upload-form").addEventListener("submit", async function (e) {
+            e.preventDefault();
+            const fileInput = document.getElementById("file-input");
+            const file = fileInput.files[0];
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            const response = await fetch("http://127.0.0.1:8000/predict/", {
+                method: "POST",
+                body: formData
+            });
+
+            const result = await response.json();
+            document.getElementById("result").textContent = `Predicted Digit: ${result.prediction}`;
+        });
+    </script>
+</body>
+</html>
