@@ -1,27 +1,42 @@
-from fastapi import FastAPI, UploadFile, File
-from fastapi.responses import JSONResponse
-from fastapi.staticfiles import StaticFiles  # Import this
-
+from fastapi import FastAPI, File, UploadFile
+from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 import joblib
 import numpy as np
 from PIL import Image
 import io
+import os
 
+app = FastAPI()
 
-app = FastAPI()  # ← FIRST define `app`
+# Enable CORS for frontend development
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Set specific origins if needed
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-# Now it's safe to mount frontend
-app.mount("/frontend", StaticFiles(directory="frontend", html=True), name="frontend")
+# Mount static folder
+app.mount("/frontend", StaticFiles(directory="frontend"), name="frontend")
 
-# Prediction API
+# Load the trained model
+model = joblib.load("backend/model/digit_model.pkl")
+
+# Serve upload.html at root URL
+@app.get("/", response_class=HTMLResponse)
+async def serve_upload_form():
+    return FileResponse("frontend/upload.html")
+
+# Handle image prediction
 @app.post("/predict/")
 async def predict(file: UploadFile = File(...)):
-    contents = await file.read()
-    image = Image.open(io.BytesIO(contents)).convert("L").resize((8, 8))
-    image = np.array(image)
-    image = 16 - (image / 16).astype(int)
+    image = Image.open(io.BytesIO(await file.read())).convert("L")
+    image = image.resize((8, 8))  # Resize to match model input
+    image = np.array(image) / 16.0  # Normalize to match training
     image = image.reshape(1, -1)
 
-    model = joblib.load("backend/model/digit_model.pkl")
     prediction = model.predict(image)[0]
     return JSONResponse(content={"prediction": int(prediction)})

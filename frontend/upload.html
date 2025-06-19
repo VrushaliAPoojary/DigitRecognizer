@@ -1,64 +1,76 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Digit Recognizer</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-      background-color: #f5f5f5;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #00c6ff, #0072ff);
+      color: #fff;
+    }
+
+    .container {
+      max-width: 500px;
+      margin: 60px auto;
+      padding: 30px;
+      background-color: #ffffff;
+      color: #333;
+      border-radius: 15px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+      text-align: center;
     }
 
     h1 {
-      text-align: center;
-      color: #333;
-    }
-
-    form {
-      max-width: 400px;
-      margin: auto;
-      padding: 20px;
-      background-color: white;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      margin-bottom: 25px;
+      font-size: 32px;
+      color: #0072ff;
     }
 
     input[type="file"] {
-      margin-bottom: 15px;
-    }
-
-    button {
-      padding: 10px 20px;
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      border-radius: 5px;
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 25px;
+      border: 2px dashed #0072ff;
+      border-radius: 10px;
       cursor: pointer;
     }
 
+    button {
+      padding: 12px 30px;
+      background: #ff4b2b;
+      color: #fff;
+      border: none;
+      border-radius: 50px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
     button:hover {
-      background-color: #45a049;
+      background: #ff416c;
     }
 
     #result {
-      text-align: center;
-      font-size: 20px;
-      margin-top: 20px;
+      margin-top: 25px;
+      font-size: 22px;
+      font-weight: bold;
       color: #000080;
     }
   </style>
 </head>
 <body>
 
-  <h1>Digit Recognizer</h1>
-
-  <form id="upload-form">
-    <input type="file" id="file-input" name="file" accept="image/*" required><br>
-    <button type="submit">Predict</button>
-  </form>
-
-  <div id="result"></div>
+  <div class="container">
+    <h1>Digit Recognizer</h1>
+    <form id="upload-form">
+      <input type="file" id="file-input" name="file" accept="image/*" required />
+      <button type="submit">Predict</button>
+    </form>
+    <div id="result"></div>
+  </div>
 
   <script>
     document.getElementById("upload-form").addEventListener("submit", async function (e) {
@@ -81,18 +93,16 @@
           body: formData,
         });
 
-        if (!response.ok) {
-          throw new Error("Network response was not ok");
-        }
+        if (!response.ok) throw new Error("Network error");
 
         const result = await response.json();
         document.getElementById("result").textContent = "Predicted Digit: " + result.prediction;
-      } catch (error) {
-        console.error("Error:", error);
-        alert("An error occurred while predicting.");
+      } catch (err) {
+        document.getElementById("result").textContent =
+          "❌ Prediction failed: " + err.message;
+        console.error(err);
       }
     });
   </script>
-
 </body>
 </html>
