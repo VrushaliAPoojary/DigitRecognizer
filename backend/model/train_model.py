@@ -1,24 +1,23 @@
-import os
-import joblib
-from sklearn.datasets import fetch_openml
-from sklearn.model_selection import train_test_split
+from sklearn.datasets import load_digits
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+import joblib
+import os
 
-print("Fetching MNIST data...")
-X, y = fetch_openml('mnist_784', version=1, return_X_y=True, as_frame=False)
+print("Fetching MNIST digits...")
+digits = load_digits()
+X, y = digits.data, digits.target
 
 print("Splitting data...")
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 
 print("Training model...")
-clf = RandomForestClassifier()
+clf = RandomForestClassifier(n_estimators=100)
 clf.fit(X_train, y_train)
 
-print("Saving model...")
-# ✅ Create directory if it doesn't exist
-os.makedirs("backend/model", exist_ok=True)
+# Save model
+model_path = "backend/model"
+os.makedirs(model_path, exist_ok=True)
+joblib.dump(clf, os.path.join(model_path, "digit_model.pkl"))
 
-# ✅ Save the model
-joblib.dump(clf, "digit_model.pkl")
-
-print("Model saved successfully!")
+print("✅ Model trained and saved successfully!")

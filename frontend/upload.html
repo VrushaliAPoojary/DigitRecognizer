@@ -5,102 +5,143 @@
   <title>Digit Recognizer</title>
   <style>
     body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #00c6ff, #0072ff);
       margin: 0;
       padding: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #00c6ff, #0072ff);
-      color: #fff;
     }
 
     .container {
       max-width: 500px;
       margin: 60px auto;
+      background: #fff;
       padding: 30px;
-      background-color: #ffffff;
-      color: #333;
       border-radius: 15px;
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
       text-align: center;
+      color: #333;
     }
 
     h1 {
-      margin-bottom: 25px;
-      font-size: 32px;
       color: #0072ff;
+      margin-bottom: 20px;
     }
 
-    input[type="file"] {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 25px;
+    #drop-area {
       border: 2px dashed #0072ff;
+      padding: 25px;
       border-radius: 10px;
       cursor: pointer;
+      background: #f0f8ff;
+      margin-bottom: 20px;
+    }
+
+    #drop-area.hover {
+      background-color: #e0f3ff;
     }
 
     button {
       padding: 12px 30px;
-      background: #ff4b2b;
-      color: #fff;
+      background-color: #ff4b2b;
+      color: white;
       border: none;
-      border-radius: 50px;
+      border-radius: 30px;
       font-size: 16px;
       cursor: pointer;
-      transition: background 0.3s ease;
     }
 
     button:hover {
-      background: #ff416c;
+      background-color: #ff416c;
     }
 
     #result {
-      margin-top: 25px;
+      margin-top: 20px;
       font-size: 22px;
       font-weight: bold;
       color: #000080;
     }
+
+    #preview {
+      width: 100px;
+      margin-top: 15px;
+      display: none;
+    }
   </style>
 </head>
 <body>
-
   <div class="container">
     <h1>Digit Recognizer</h1>
     <form id="upload-form">
-      <input type="file" id="file-input" name="file" accept="image/*" required />
+      <div id="drop-area">
+        <p>📷 Drag & Drop image here or click to upload</p>
+        <input type="file" id="file-input" name="file" accept="image/*" hidden />
+      </div>
       <button type="submit">Predict</button>
     </form>
+    <img id="preview" />
     <div id="result"></div>
   </div>
 
   <script>
+    const dropArea = document.getElementById("drop-area");
+    const fileInput = document.getElementById("file-input");
+    const preview = document.getElementById("preview");
+
+    dropArea.addEventListener("click", () => fileInput.click());
+
+    dropArea.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      dropArea.classList.add("hover");
+    });
+
+    dropArea.addEventListener("dragleave", () => {
+      dropArea.classList.remove("hover");
+    });
+
+    dropArea.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dropArea.classList.remove("hover");
+      const files = e.dataTransfer.files;
+      if (files.length) {
+        fileInput.files = files;
+        showPreview(files[0]);
+      }
+    });
+
+    fileInput.addEventListener("change", () => {
+      const file = fileInput.files[0];
+      if (file) showPreview(file);
+    });
+
+    function showPreview(file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        preview.src = reader.result;
+        preview.style.display = "block";
+      };
+      reader.readAsDataURL(file);
+    }
+
     document.getElementById("upload-form").addEventListener("submit", async function (e) {
       e.preventDefault();
-
-      const fileInput = document.getElementById("file-input");
       const file = fileInput.files[0];
-
-      if (!file) {
-        alert("Please select a file.");
-        return;
-      }
+      if (!file) return alert("Please select a file");
 
       const formData = new FormData();
       formData.append("file", file);
 
       try {
-        const response = await fetch("http://127.0.0.1:8000/predict/", {
+        const res = await fetch("http://127.0.0.1:8000/predict/", {
           method: "POST",
           body: formData,
         });
 
-        if (!response.ok) throw new Error("Network error");
+        if (!res.ok) throw new Error("Prediction failed");
 
-        const result = await response.json();
-        document.getElementById("result").textContent = "Predicted Digit: " + result.prediction;
+        const data = await res.json();
+        document.getElementById("result").textContent = "Predicted Digit: " + data.prediction;
       } catch (err) {
-        document.getElementById("result").textContent =
-          "❌ Prediction failed: " + err.message;
-        console.error(err);
+        document.getElementById("result").textContent = "❌ Error: " + err.message;
       }
     });
   </script>
