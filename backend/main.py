@@ -8,6 +8,9 @@ from PIL import Image
 import io
 import os
 from datetime import datetime
+import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use('Agg')  # Prevent GUI backend error
 
 app = FastAPI()
 
@@ -39,14 +42,23 @@ async def serve_upload_form():
 
 @app.post("/predict/")
 async def predict(file: UploadFile = File(...)):
+    # Load and preprocess image
     image = Image.open(io.BytesIO(await file.read())).convert("L")
-    image = image.resize((28, 28))
-    image = np.array(image) / 255.0
+    image = image.resize((8, 8))
+    image = np.array(image) / 255.0 * 16
     image = image.reshape(1, -1)
 
+    # Predict
     prediction = model.predict(image)[0]
 
+    # Log prediction
     with open(log_file, "a") as f:
         f.write(f"{datetime.now().isoformat(timespec='seconds')},{int(prediction)}\n")
+
+    # Save debug image for inspection
+    plt.imshow(image.reshape(8, 8), cmap='gray')
+    plt.title(f"Predicted: {prediction}")
+    plt.axis('off')
+    plt.savefig("debug_image.png")  # Saves to root project folder
 
     return JSONResponse(content={"prediction": int(prediction)})
